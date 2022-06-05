@@ -1,0 +1,206 @@
+---
+title: "Project 2D"
+output: html_notebook
+---
+
+Melissa Sedano
+BIMM 143
+
+## Introduction
+
+##Scientific Question: Do the amino acid sequences and structure between the peroxisome proliferator-activated receptor alpha in humans and mice share enough similarity to consider the PPAR alpha mice model an accurate model of the PPAR alpha receptor in humans?
+
+Background:
+
+Peroxisome proliferator-activated receptor alpha (PPAR alpha) is a transcription factor belonging to a family of nuclear receptors. This family also includes PPAR beta and PPAR gamma. PPARs are mainly activated through ligand binding, which changes their conformation and allows them to form a heterodimer with the retinoid X receptor (RXR) bind to DNA, and activate the transcription of target genes (Pap et al, 2016) Structurally, PPARs consist of a DNA binding domain, ligand binding domain (LBD), and transactivation domain (Pap et al, 2016). PPAR alpha plays an important role in lipid metabolism and its expression is highest in organs such as the heart, liver and kidneys (Yang et al, 2008). Most of what is now known about PPAR alpha has been obtained from mice studies, due to the genetic and physiological similarities shared between humans and mice. However, despite these similarities several studies have found similarities as well as differences between PPAR alpha in humans and PPAR alpha in mice. For instance, it has been found that while human PPAR alpha and mouse PPAR alpha both have a high binding affinity for the ligand long-chain fatty acyl-CoA, differences exist in the binding affinity of long-chain fatty acid (LFCA) (Oswal et al, 2013). This suggests that there may be differences in the PPAR alpha protein sequences and that these differences could affect the function of the receptor across species. Therefore, it is important to compare the sequence of PPAR alpha between human and mice with special attention to the ligand binding domain.
+
+##Hypothesis: If the peroxisome proliferator-activated receptor alpha is mainly activated through the ligand binding domain, and has been shown to have different binding affinities to ligands between the species human and mouse, then there should be differences in the amino acid residues of the human PPAR alpha receptor ligand binding domain and mouse PPAR alpha receptor ligand binding domain.
+
+Description of analyses done and how data was downloaded:
+
+To compare the protein sequences of human PPARA alpha and mouse PPAR alpha, a global pairwise sequence alignment was performed. The protein sequences used in the alignment for each species were downloaded from the database Uniprot and saved as FASTA files. The sequences can be found on Uniprot using the accession numbers Q07869 for human PPAR alpha and P23204 for mouse PPAR alpha. To visually compare a portion of the PPAR alpha ligand binding domain sequence in each species, the bioinformatics method sequence logos was used. Due to the limited availability of nuclear receptor crystal structures in the RCSB Protein Data Bank for both human and mouse, homology modeling was performed to create a model of the mouse PPAR alpha ligand binding domain using its protein sequence and a known human PPAR alpha structure of the ligand binding domain in complex with a synthetic agonist TIPP703. The human PPAR alpha LBD crystal structure, accession number 2ZNN, was downloaded in PDB format from the Protein Data Bank. The homology model was produced externally using the website Swiss-Model. To identify specific differences in amino acid residues between the PPAR alpha LBD mouse homology model structure and the human PPAR alpha LBD crystal structure, the 3D visualization tool PyMOL was used to create a scene based movie.
+
+## Loading in packages
+
+Here I will describe the necessary packages before loading them in using the library function:
+
+1. BiocManager: BiocManager is a package from the Bioconductor software project. Its purpose is to allow for the installation and management of Bioconductor packages. Packages installed from Bioconductor may be used to analyze genomic data. To learn more about BiocManager see: https://www.bioconductor.org/install/
+
+2. Biostrings: Biostrings is a Bioconductor package which contains functions that allows users to read in biological sequences such as DNA, RNA, and proteins. Functions within this package also allow users to manipulate the sequences as well as perform sequence alignments using the pairwiseAlignment() function for example. To learn more about Biostrings see: https://bioconductor.org/packages/release/bioc/html/Biostrings.html
+
+3. seqinr: Seqinr is a package containing functions that allows users to obtain DNA and protein sequences from databases as well as analyze the sequences. The c2s() function within the package for example, can be used to character vectors into a string. To learn more about seqinr see: https://cran.r-project.org/web/packages/seqinr/seqinr.pdf
+
+4. ggseqlogo: ggseqlogo is a package that allows users to create sequence logos to visualize biological sequence alignments. Sequence logos created using this package can be customized by specifying arguments within the geom_logo() or ggseqlogo() functions. Features such as the font type and color scheme applied to the sequence logo for example, can be specified. To learn more about ggseqlogo see:
+https://cran.r-project.org/web/packages/ggseqlogo/ggseqlogo.pdf
+
+
+5. msa: msa is a Bioconductor package used to perform multiple sequence alignments on biological sequences. It includes three algorithms: ClustalW, ClustalOmega, and Muscle. Users are also able to plot alignments produced with this package using the msaPrettyPrint() function. To learn more about msa see:
+https://bioconductor.org/packages/release/bioc/html/msa.html
+
+
+6. vembedr: vembedr is a package containing functions that allow users to embed videos into R markdown. Users can embed videos from YouTube, Vimeo, Box, and Microsoft Stream. Videos with URL links can be embedded using the embed_url() function. To learn more about vembedr see:
+https://cran.r-project.org/web/packages/vembedr/vembedr.pdf
+
+```{r}
+# To install Bioconductor packages BiocManager must first be installed
+# To install BiocManager enter the following into the R studio console and hit enter
+# if (!require("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+# BiocManager::install()
+# Other packages can be installed using the install.package() function
+# To load packages into the R notebook use the library() function
+
+# Load necessary packages
+library(BiocManager)
+library(Biostrings)
+library(seqinr)
+library(ggseqlogo)
+library(msa)
+library(vembedr)
+```
+
+
+## Performing Bioinformatics Analysis Part 1
+
+In the code below, we read in the human PPAR alpha and mouse PPAR alpha protein sequences saved as FASTA files. A FASTA file is a text file containing sequence information. The first line in the file starts with a greater-than sign > and contains description information. The rest of the text in the file contains the sequence. The human PPAR alpha sequence was obtained from Uniprot with the accession number Q07869. The mouse PPAR alpha sequence was also obtained from Uniprot with the accession number P23204. Here we use the bioinformatics method pairwise sequence alignment which is used to compare two biological sequences such as proteins in this case, to identify similar regions. A global pairwise sequence alignment aligns the entire length of each sequence and generates a similarity score using a scoring matrix to assign matches and mismatches between the sequences.
+
+```{r}
+# Read in Human PPAR alpha and Mouse PPAR alpha fasta file protein sequences by file name and assign to Global variables HumanPPARalpha and MousePPARalpha
+
+HumanPPARalpha <- read.fasta(file = "HumanPPARalpha.fasta")
+MousePPARalpha <- read.fasta(file = "MousePPARalpha.fasta")
+
+# Access each sequence as a character list element and assign to Global variables HumanPPARalpha_seq and MousePPARalpha_seq
+
+HumanPPARalpha_seq <- HumanPPARalpha[[1]]
+MousePPARalpha_seq <- MousePPARalpha[[1]]
+
+# Print variables to see content
+HumanPPARalpha_seq
+MousePPARalpha_seq
+
+# Convert sequences from character list to strings to prepare for pairwiseAlignment function and assign to Global variables HumanPPARalpha_seqstring and MousePPARalpha_seqstring
+
+HumanPPARalpha_seqstring <- c2s(HumanPPARalpha_seq)
+MousePPARalpha_seqstring <- c2s(MousePPARalpha_seq)
+
+# Make sure sequences are in upper case letters to be in correct format for pairwiseAlignment() function
+
+HumanPPARalpha_seqstring <- toupper(HumanPPARalpha_seqstring)
+MousePPARalpha_seqstring <- toupper(MousePPARalpha_seqstring)
+
+# Print out content of Global variables
+# These Global variables will later be used to create sequence logo
+HumanPPARalpha_seqstring
+MousePPARalpha_seqstring
+
+# Load in scoring matrix BLOSUM50 from Biostrings package for alignment
+
+data(BLOSUM50)
+BLOSUM50
+
+# Perform optimal Global pairwise sequence alignment using pairwiseAlignment() function by specifying the sequences for alignment, scoring matrix, and scoring values for gaps
+# Assign to variable globalAlign and print
+
+globalAlign <- pairwiseAlignment(HumanPPARalpha_seqstring, MousePPARalpha_seqstring, substitutionMatrix = BLOSUM50, gapOpening = -2, gapExtension = -8, scoreOnly = FALSE)
+
+globalAlign
+
+```
+
+Next a dot plot will be used to visualize the overall similarity between the entire human PPAR alpha sequence and entire mouse PPAR alpha sequence. The human PPAR alpha sequence is plotted on the x-axis while the mouse PPAR alpha sequence is plotted on the y-axis. Many dots along a diagonal line indicate many amino acids are shared between two sequences.
+
+```{r}
+# Create dot plot by inputing the Global variables HumanPPARalpha_seq and MousePPARalpha_seq into the dotPlot() function
+
+dotPlot(HumanPPARalpha_seq, MousePPARalpha_seq)
+```
+
+To determine similarities and differences between the human PPARA alpha LBD and mouse PPAR alpha LBD sequences the visual analysis method sequence logos will be used. Sequence Logos are generated from a sequence alignment, and in the case of a protein sequence alignment, show the amino acids (represented by letter symbols) that are conserved between the two sequences as a single letter and the amino acids that differ between the two sequences as two different letters stacked.
+
+```{r}
+# Using information from each species' Uniprot page the amino acid residue numbers corresponding to the ligand binding domain were determined
+# Only twenty residues were chosen from each species' LBD sequence to better visualize the sequence logo
+
+# Select portion of amino acid sequence for ligand binding domain from HumanPPARalpha_seqstring and MousePPARalpha_seqstring
+# Residues 246 through 265 are selected and assigned to the local variables HumanPPARalpha_LBD and MousePPARalpha_LBD
+
+HumanPPARalpha_LBD <- substring(HumanPPARalpha_seqstring, 246, 265)
+HumanPPARalpha_LBD
+
+MousePPARalpha_LBD <- substring(MousePPARalpha_seqstring, 246, 265)
+MousePPARalpha_LBD
+
+# A vector LBD_sequences of the LBD sequences is created to be used as the data input argument in the msa() alignment function
+
+LBD_sequences <- c(HumanPPARalpha_LBD, MousePPARalpha_LBD)
+LBD_sequences
+
+# Multiple sequence alignment is performed using msa() function and the alignment type is specified
+# Alignment is set to the local variable LBD_alignment
+
+LBD_alignment <- msa(LBD_sequences, type = "protein")
+
+# The alignment is converted to a character vector for the data input in the ggseqlogo() function
+
+LBD_alignment_ch <- as.character(LBD_alignment)
+LBD_alignment_ch
+
+# Create sequence logo using LBD_alignment_ch and specify the sequence type 'aa' for amino acid 
+
+ggseqlogo(LBD_alignment_ch, seq_type= 'aa')
+```
+
+## Performing Bioinformatics analysis Part 2
+
+Homology modeling is a bioinformatics method which allows for the 3D comparison of biological structures between species. The model and structure assessment generated through Swiss-Model helps in understanding how similar the structures of two aligned sequences are when a structure is unavailable for one of the species. A known similar crystal structure to the target sequence with an unknown structure is used to generate the model.
+
+Homology modeling was performed externally from the notebook using the online modeling system Swiss-Model to create a homology model using the mouse PPAR alpha sequence and the human PPAR LBD structure. The mouse PPAR alpha “target” sequence was obtained from Uniprot with the accession number P23204. A known human PPAR alpha crystal structure of the ligand binding domain was obtained from the Protein Data Bank with the accession number 2ZNN and was used as the template.
+
+The resulting model and results can be accessed here:
+
+https://swissmodel.expasy.org/interactive/UKJYaX/models/
+
+Below are some of the images from the structure assesment
+
+```{r}
+# Selected images were downloaded from Swiss-Model homology model results page in PNG format and saved in a file called images under working directory
+# The name of the saved image and the format (.png) follows the file name images in the function knitr::include_graphics()
+# This function is used to embed the images in the notebook
+
+knitr::include_graphics("images/RamachandranPlot.png")
+
+```
+
+This plot gives information about the secondary structure of the homology model.The dots in the plot represent the amino acids in the model and their location on the plot corresponds to a secondary structure. In the lower left quadrant we see that many of the amino acids, including those modeled with high confidence are right-handed alpha helices. The amino acids in the upper left quadrant are various beta sheet structures. From this plot we can see that the more common secondary structure of the model seems to be alpha helices due to the dense cluster of amino acids.
+
+```{r}
+# Embed image of Homology Model
+
+knitr::include_graphics("images/Homology_structure.png")
+```
+The colors in the model are representative of the confidence of the alignment between the target and the template. Differences in the sequence alignment give regions that are modeled with low confidence shown in orange color, while regions modeled with high confidence are shown in blue color.
+
+```{r}
+# Embed image of Local Quality Estimate
+
+knitr::include_graphics("images/Local_quality_estimate.png")
+```
+
+The local quality estimate displays information about which parts of the model are reliable and which parts are unreliable. In other words, we can see how similar the template structure is to the target sequence. If stretches in the plot reach below 0.6, it is an indication of low quality.
+
+
+
+PyMOL is a bioinformatics visualization tool for 3D molecular structures. Analysis using PyMOL was done externally from the notebook to compare the homology structure to the human PPAR alpha LBD crystal structure and identify differences in the residues between the two structures. The fetch command followed by the accession number 2ZNN was entered into the command line in PyMOL to retrieve the human PPAR LBD crystal structure from the Protein Data Bank. The homology model was downloaded in PDB format from the Swiss-Model results page and opened in PyMOL. By aligning the 3D structures and displaying the amino acid sequences, differences in LBD residues were identified and selected to create a scene based movie. In the resulting movie the homology model is shown in purple, while the human PPAR LBD structure is shown in blue.
+
+```{r}
+# Embed PyMOL movie uploaded to YouTube using URL inserted into vembedr function embed_url
+embed_url("https://youtu.be/cmBteJN6QaY")
+
+```
+
+## Analyzing the Results
+
+In Part 1 of the bioinformatics analysis, a global pairwise sequence alignment between the full-length human PPAR alpha and mouse PPAR alpha amino acid sequences resulted in an alignment score of 2966. This score suggests a high similarity between the two sequences, and this similarity can further be visualized from the dot plot of the alignment. The dot plot indicates that the two species share many identical amino acids as clearly indicated by the diagonal line. Twenty amino acid residues from the ligand binding domain between the two sequences were compared using a sequence logo, and four of the twenty residues were found to be different. Residue 258 is Methionine in mouse and Leucine in human, residue 263 is Valine in mouse and Isoleucine in human, residue 264 is Glutamic Acid in mouse and Glutamine in human, and finally, residue 265 is Aspartic Acid in mouse and Asparagine in human.
+In Part 2 of the bioinformatics analysis, homology modeling allowed a structural comparison of the two sequences with focus on the ligand binding domain. The mouse PPAR alpha sequence was found to have a 93.02% sequence identity to the human PPAR alpha LBD template structure which indicates the percentage of exact matches between residues in the sequences. The Ramachandran plot showed that there is high homology between residues in the alpha helices as indicated by the dense cluster of dark colored (higher confidence) residues in the lower left quadrant. Qualitatively, it can be seen that there is high homology between residues (blue) in the center of the model structure. The Local Quality Estimate of the structure indicates that overall most of the residues are similar between the target sequence and the template structure with the exception of select residues between around 231 and 265 shown in orange. Finally, in the PyMOL movie alignment comparison, the following residue differences were identified and visualized: Residue 211 in the homology model is a Histidine and in the human structure it is a Tyrosine, residue 258 (from sequence logos), and residue 265 (from sequence logos).
+The results of this analysis show that overall there are a high number of conserved amino acid residues between human PPAR alpha and mouse PPAR alpha and that despite this similarity, differences are present in the LBD which may be linked to differences in ligand binding affinity, as observed in previous studies. Thus, my hypothesis is correct that there are differences present in the LBD between both species.
